@@ -191,8 +191,10 @@ export function StudentIdCard({
           p.x += v.x
           p.y += v.y
         }
-        applyTransform()
       }
+
+      // Ghi DOM (wrapper + thẻ + dây đeo SVG) đúng 1 lần/frame, kể cả khi đang kéo
+      applyTransform()
 
       raf = requestAnimationFrame(step)
     }
@@ -243,7 +245,8 @@ export function StudentIdCard({
     const ny = c.baseY + (e.clientY - c.startY)
     pos.current.x = nx
     pos.current.y = ny
-    applyTransform()
+    // Không ghi DOM ở đây — loop rAF sẽ áp transform đúng 1 lần/frame.
+    // (pointermove có thể tới 240Hz không đều; ghi dây đeo SVG theo nhịp đó gây giật)
   }
 
   const onPointerUp = () => {
@@ -349,7 +352,7 @@ export function StudentIdCard({
       {/* ===== Movable card group ===== */}
       <div
         ref={wrapperRef}
-        className="absolute top-0 will-change-transform"
+        className="absolute top-0 will-change-transform shadow-[0_30px_70px_-18px_rgba(2,6,23,0.65),0_8px_24px_-12px_rgba(2,6,23,0.4)]"
         style={{
           left: '50%',
           marginLeft: -CARD_W / 2,
@@ -377,8 +380,8 @@ export function StudentIdCard({
           {/* clip slot on the card top edge */}
           <div className="absolute left-1/2 top-0 h-[6px] w-9 -translate-x-1/2 rounded-b-md bg-gradient-to-b from-neutral-500 to-neutral-700" />
 
-          {/* card face */}
-          <div className="relative h-full w-full overflow-hidden rounded-[14px] border border-neutral-300 bg-gradient-to-b from-white via-neutral-50 to-neutral-100 shadow-[0_30px_70px_-18px_rgba(2,6,23,0.65),0_8px_24px_-12px_rgba(2,6,23,0.4)]">
+          {/* card face — shadow đã chuyển lên wrapper (chỉ translate) để khỏi re-raster khi xoay 3D */}
+          <div className="relative h-full w-full overflow-hidden rounded-[14px] border border-neutral-300 bg-gradient-to-b from-white via-neutral-50 to-neutral-100">
             {/* top band: university */}
             <div className="flex h-10 w-full items-center gap-2 bg-gradient-to-r from-[#0b2a75] via-[#1e40af] to-[#0b2a75] px-3">
               <svg width="22" height="22" viewBox="0 0 24 24">
@@ -433,7 +436,8 @@ export function StudentIdCard({
             </div>
 
             {/* hologram sticker */}
-            <div className="absolute right-2 top-[54px] h-[18px] w-7 rounded-[3px] bg-gradient-to-br from-emerald-300/80 via-teal-200/60 to-emerald-400/80 backdrop-blur-[0.3px]" />
+            {/* hologram — bỏ backdrop-blur (0.3px gần như vô hình) vì trong khối 3D đang xoay nó ép re-rasterize mỗi frame */}
+            <div className="absolute right-2 top-[54px] h-[18px] w-7 rounded-[3px] bg-gradient-to-br from-emerald-300/80 via-teal-200/60 to-emerald-400/80" />
 
             {/* barcode bottom-right */}
             <div className="absolute right-0 bottom-0 flex h-6 w-24 items-center justify-center gap-[2px] overflow-hidden rounded-tl-md bg-gradient-to-r from-slate-100 to-slate-200">
